@@ -13,7 +13,7 @@ ARGS = {
         "help": "Specifies a config file to load, defaults to the one provided next to main.py",
         "usage": "--config=/path/to/config.json"
     },
-    "comp-level": {
+    "comp-level": { # TODO: implement
         "data": 1,
         "help": "Sets the compression level, defaults to 1",
         "usage": "--comp-level=5"
@@ -21,7 +21,6 @@ ARGS = {
 
 }
 FLAGS = {
-    "nosave": False,
     "debug": False,
     "restore": False
 }
