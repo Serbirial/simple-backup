@@ -2,8 +2,7 @@
 import zipfile
 from os import walk, remove
 from os.path import basename
-from sys import getsizeof
-
+from sys import getsizeof, path
 
 from . import io, compression, addons
 
@@ -26,20 +25,35 @@ class Zip: # Object for easy handling
 
         else:
             self.create_zip(name, False)
+        self.name = name
+
+        self.funcs = {
+            "compress": self._compress,
+            "decompress": self._decompress
+        }
 
         self.load_addons(addons)
 
-        self.name = name
 
     def load_addons(self, to_load):
         if len(to_load) != 0:
             addons.load(to_load)
-            print(_addons)
+            imports = { # TODO: review how to do this without casting
+                "directory": f"{self.directory}",
+                "compression_level": int(f"{self.compression_level}"),
+                "temp_path": f"{self.temp_path}",
+                "dest": f"{self.dest}",
+                "name": f"{self.name}"
+                }
+            for addon in addons.get_addons():
+                addon.insert_imports(imports)
+                for name, _callable in addon.to_replace.items():
+                    self.funcs[name] = _callable
+                
 
 
     def create_zip(self, name, reading):
         path = f"{self.dest}/{name}.zip"
-        print(path)
         try:
             if reading:
                 self.zf = zipfile.ZipFile(path, "r")
@@ -48,7 +62,7 @@ class Zip: # Object for easy handling
         except FileNotFoundError:
             raise FileNotFoundError("Given destination directory does not exist.")
         except FileExistsError:
-            print("Removing existing backup")
+            print(f"Removing existing backup ({path})")
             remove(path)
             self.create_zip(name, False)
 
@@ -73,7 +87,7 @@ class Zip: # Object for easy handling
         #else:
         #    return False, errors
 
-    def decompress(self):
+    def _decompress(self):
         """ Decompress all files in `self.compressed_files`"""
         io.clear_tmp(self.temp_path)
         self.unzip()
@@ -99,6 +113,9 @@ class Zip: # Object for easy handling
             io.bytes_write_file(decompressed)
         io.clear_tmp(self.temp_path)
         return True, len(to_decomp)
+    
+    def decompress(self):
+        return self.funcs["decompress"]()
 
 
     # Compressing #
@@ -157,7 +174,7 @@ class Zip: # Object for easy handling
     def compress(self):
         total = 0
         for parent, subdirs, files in walk(self.directory):
-            total += self._compress(parent, files)
+            total += self.funcs["compress"](parent, files)
 
         io.clear_tmp(self.temp_path)
         return True, total
