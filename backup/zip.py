@@ -49,7 +49,7 @@ class Zip: # Object for easy handling
                 addon.insert_imports(imports)
                 for name, _callable in addon.to_replace.items():
                     self.funcs[name] = _callable
-                
+
 
 
     def create_zip(self, name, reading):
@@ -113,7 +113,7 @@ class Zip: # Object for easy handling
             io.bytes_write_file(decompressed)
         io.clear_tmp(self.temp_path)
         return True, len(to_decomp)
-    
+
     def decompress(self):
         return self.funcs["decompress"]()
 
@@ -200,7 +200,7 @@ class Zip: # Object for easy handling
             for chunk in io.read_in_chunks(f, 104857600): # 100mb chunks
                 chunks.append(chunk)
                 mem = self._check_chunks_size(chunks)
-                if mem > 450: # 450mb, allowing for the inevitable overhead with pythons pre-allocation and how big the file is when its written.
+                if mem >= 450: # 450mb, allowing for the inevitable overhead with pythons pre-allocation and how big the file is when its written.
                     if not has_started_splitting:
                         print(f"Splitting tmp file into parts...")
                         has_started_splitting = True
@@ -225,12 +225,12 @@ class Zip: # Object for easy handling
                 del chunks # Free up memory
                 part_files.append(current_part)
 
-            print("Writing part files to tmp")
+            print("Writing part files to tmp (may take a while for compression)")
             for partfile in part_files:
                 with open(partfile, "rb") as p: # Compress and write part files to main tmp
-                    for chunk in io.read_in_chunks(p, 104857600): # 100mb chunks
+                    for chunk in io.read_in_chunks(p, 104857600*2): # 200mb chunks
                         compressed = comp.compress(chunk)
-                        main.write(compressed) # TODO: review a better way of doing this
+                    main.write(compressed) # TODO: review a better way of doing this
                     io.rm(partfile)
 
             print("Successfully wrote part files to tmp")
