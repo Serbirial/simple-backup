@@ -1,0 +1,7 @@
+{
+    "sleep": 600,
+    "dirs": ["/home/YOUR_USER/directory_to_backup"],
+    "dest": "/path/to/backup/destination",
+	"plugins": [],
+	"tmpfile_location": "/path/to/tempfile/directory(do NOT use /tmp OR /temp, use a custom directory that is solely for this tool)"
+}
