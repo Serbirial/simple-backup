@@ -79,8 +79,6 @@ class Zip: # Object for easy handling
         self.unzip()
         to_decomp = io.find_compressed_files(self.temp_path)
 
-        print(f"{self.dest}/{self.name}")
-        io.mkdir(f"{self.dest}/{self.name}")
 
         for file in to_decomp: # Decompress and write all the files to fs
             decompressed = io.File(contents=compression.chunked_decompression(io.read_in_chunks(open(file, "rb"), 104857600)), fullpath=f"{self.temp_path}/{file}")
@@ -89,7 +87,8 @@ class Zip: # Object for easy handling
 
             decompressed_parent = decompressed.fullpath.split(self.temp_path)[2].split(filename)[0]
             if decompressed_parent.startswith("/"):
-                decompressed_parent = f"{self.dest}/{self.name}/{decompressed_parent.split('/', 1)[1]}"
+                decompressed_parent = f"{self.dest}/restored/{self.name}/{decompressed_parent.split('/', 1)[1]}"
+            io.mkdir(decompressed_parent)
 
 
             # {self.dest}/{self.name}
@@ -184,7 +183,7 @@ class Zip: # Object for easy handling
             for chunk in io.read_in_chunks(f, 104857600): # 100mb chunks
                 chunks.append(chunk)
                 mem = self._check_chunks_size(chunks)
-                if mem > 500: # 500mb
+                if mem > 450: # 450mb, allowing for the inevitable overhead with pythons pre-allocation and how big the file is when its written.
                     if not has_started_splitting:
                         print(f"Splitting tmp file into parts...")
                         has_started_splitting = True
@@ -220,18 +219,8 @@ class Zip: # Object for easy handling
             print("Successfully wrote part files to tmp")
 
         elif len(part_files) == 0: # This should not happen, but it can (maybe, idk)
-            compressed = []
+            print("There are no part files, this shouldnt happen. To be put in a tmp a file has to be over 750mb, yet the received file is under 450/500mb.")
 
-            iterations = 0
-            max_iterations = len(chunks)
-
-            while max_iterations >= iterations: # TODO: i literally have no fucking clue how or if this works
-                iterations += 1
-                print(f"current/max : {iterations}/{max_iterations}")
-                #compressed.append(comp.compress(chunk))
-                #chunks.remove(chunk)
-                #main.write(comp.compress(chunk))
-            exit(0)
         main.write(comp.flush())
         main.close()
         print("Writing temp file to zip...")
