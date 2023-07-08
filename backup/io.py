@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 
-from os import listdir, remove, walk
-from os import mkdir as makedir
+from os import listdir, remove, walk, makedirs
 from shutil import rmtree
 
 @dataclass
@@ -84,7 +83,7 @@ def read_file_bytes(file: str, chunked: bool = True):
         return f.read()
     
 def mkdir(name: str):
-    makedir(name)
+    makedirs(name, exist_ok=True)
 
 def rm(path: str):
     remove(path)
