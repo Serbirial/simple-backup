@@ -37,7 +37,6 @@ class Zip: # Object for easy handling
 
     def load_addons(self, to_load):
         if len(to_load) != 0:
-            addons.load(to_load)
             imports = { # TODO: review how to do this without casting
                 "directory": f"{self.directory}",
                 "compression_level": int(f"{self.compression_level}"),
@@ -45,8 +44,8 @@ class Zip: # Object for easy handling
                 "dest": f"{self.dest}",
                 "name": f"{self.name}"
                 }
+            addons.load(to_load, imports)
             for addon in addons.get_addons():
-                addon.insert_imports(imports)
                 for name, _callable in addon.to_replace.items():
                     self.funcs[name] = _callable
 
@@ -174,7 +173,12 @@ class Zip: # Object for easy handling
     def compress(self):
         total = 0
         for parent, subdirs, files in walk(self.directory):
-            total += self.funcs["compress"](parent, files)
+            try:
+                total += self.funcs["compress"](parent, files)
+            except TypeError:
+                if addons.get_addons() != 0:
+                    print("Addon possibly causing error, using original func.")
+                    self._compress(parent, files)
 
         io.clear_tmp(self.temp_path)
         return True, total
