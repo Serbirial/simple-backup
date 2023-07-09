@@ -47,6 +47,7 @@ class Config:
         elif type(temp["sleep"]) != int or type(temp["dirs"]) != list:
             print("Malformed JSON keys.")
             exit(0)
+        print(f"Loaded {len(temp['plugins'])} plugins")
         self.sleep = temp["sleep"]
         self.tmpdir = temp["tmpfile_location"]
         self.dirs = [x for x in temp["dirs"]]
