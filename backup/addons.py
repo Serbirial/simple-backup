@@ -11,14 +11,12 @@ from dataclasses import dataclass
 class Addon:
     name: str
     path: str
-    funcs: dict
     to_replace: dict
 
 def load(paths: list[str], data: dict):
     global _addons
     _addons = []
     for file in paths:
-        _funcs = {}
         name = file.split("/")[-1].split(".")[0]
         _raw = importlib.machinery.SourceFileLoader(name, file).load_module()
         if not hasattr(_raw, "init"):
@@ -36,7 +34,7 @@ def load(paths: list[str], data: dict):
             if name not in moddable_funcs:
                 print("Addon is trying to replace a function that is not replacable.")
                 exit(0)
-        _addons.append(Addon(name=exports["name"], path=file, funcs=_funcs, to_replace=exports["replaces"]))
+        _addons.append(Addon(name=exports["name"], path=file, to_replace=exports["replaces"]))
 
 def get_addons():
     return _addons

@@ -9,11 +9,14 @@ class SomeAddon:
         }
 
     def compress(self, parent, files):
-        print(f"Given {parent}: {'  *'.join(files)}")
+        _files = ''
+        for x in files:
+            _files += f"\n   * {x}"
+        print(f"Given {parent}: {_files}")
         return len(files)
 
 
-# NOTE: THIS IS ALSO NEEDED, DO NOT MODIFY THE NAME.
-def init(data: dict) -> SomeAddon:
+
+def init(data: dict) -> SomeAddon: # Needed
     return SomeAddon(data)
 
