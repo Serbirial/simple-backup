@@ -7,3 +7,16 @@
  ALWAYS USE FULL FILE PATHS, EVEN IN THE CONFIG
 * `python3.10 main.py --config=/full/path/to/config.json` Backs up files given in `config.json`
 * `python3.10 main.py --config=/full/path/to/config.json -restore` Restores backed up folders and files into the destination in `config.json`
+
+## Features
+ Heavy compression with large files (>1gb)
+
+ Low compression with small files (<1gb)
+
+ Fast when files being backed up are smaller than 100mb.
+
+ Moddability to customize behavior.
+
+ Low memory usage when backing up. 
+
+ Low impact on overall system usage.
