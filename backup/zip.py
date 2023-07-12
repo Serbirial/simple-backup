@@ -142,7 +142,7 @@ class Zip: # Object for easy handling
                     if interation >= 4: # After 4 chunks, check mem usage
                         interation = 0
                         mem = self._check_chunks_size(chunks)
-                        if mem >= 750: # If mem usage exceeds a normal ammount, start writing to a tmp file and clear the chunks
+                        if mem >= 650: # If mem usage exceeds a normal ammount, start writing to a tmp file and clear the chunks
                             if not tempfile:
                                 tempfile = f"{self.temp_path}/{file}.tmp"
                             if not warned:
@@ -173,12 +173,7 @@ class Zip: # Object for easy handling
     def compress(self):
         total = 0
         for parent, subdirs, files in walk(self.directory):
-            try:
-                total += self.funcs["compress"](parent, files)
-            except TypeError:
-                if addons.get_addons() != 0:
-                    print("Addon possibly causing error, using original func.")
-                    self._compress(parent, files)
+            total += self.funcs["compress"](parent, files)
 
         io.clear_tmp(self.temp_path)
         return True, total
@@ -199,21 +194,25 @@ class Zip: # Object for easy handling
         chunks = []
         part_files = []
         print("Loading tmp file...")
-        with open(tmpfile, 'rb') as f:
+        with open(tmpfile, 'r') as f:
             has_started_splitting = False
             for chunk in io.read_in_chunks(f, 104857600): # 100mb chunks
                 chunks.append(chunk)
                 mem = self._check_chunks_size(chunks)
-                if mem >= 450: # 450mb, allowing for the inevitable overhead with pythons pre-allocation and how big the file is when its written.
+                if mem >= 400: # 400mb, allowing for the inevitable overhead with pythons pre-allocation and how big the file is when its written.
                     if not has_started_splitting:
                         print(f"Splitting tmp file into parts...")
                         has_started_splitting = True
                         continue
                     current_part = f"{self.temp_path}/part{len(part_files)+1}"
-                    with open(current_part, "wb+") as p:
-                        p.write(b''.join([chunk for chunk in chunks]))
+                    with open(current_part, "a+") as p:
+                        # BUG: opening in write and joining the chunks uses too much memory
+                        #p.write(''.join([chunk for chunk in chunks]))
+                        for chunk in chunks:
+                            p.write(chunk)
                         chunks.clear() # Free up the memory
                         part_files.append(current_part)
+        del mem
         io.rm(tmpfile)
         main = open(tmpfile, "ab+")
         main.seek(0,0)
@@ -224,8 +223,9 @@ class Zip: # Object for easy handling
                 # Put any remaining data into the last part file
                 print(f"Adding {len(chunks)} remaining chunks to new part file")
                 current_part = f"{self.temp_path}/part{len(part_files)+1}"
-                with open(current_part, "ab+") as lt:
-                    lt.write(b''.join([chunk for chunk in chunks]))
+                with open(current_part, "a+") as lt:
+                    for chunk in chunks:
+                        lt.write(chunk)
                 del chunks # Free up memory
                 part_files.append(current_part)
 
@@ -234,8 +234,10 @@ class Zip: # Object for easy handling
                 with open(partfile, "rb") as p: # Compress and write part files to main tmp
                     for chunk in io.read_in_chunks(p, 104857600*2): # 200mb chunks
                         compressed = comp.compress(chunk)
-                    main.write(compressed) # TODO: review a better way of doing this
-                    io.rm(partfile)
+                        main.write(compressed) # TODO: review a better way of doing this
+                        del compressed
+                    p.close()
+                io.rm(partfile)
 
             print("Successfully wrote part files to tmp")
 

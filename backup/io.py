@@ -54,7 +54,7 @@ def load_compressed_file(self, parent, files): # TODO: change to use read_file_b
     return compressed
 
 
-def write_to_temp(chunks: list[bytes], tempfile: str):
+def write_to_temp(chunks: list, tempfile: str):
     """ Writes chunks to temp file for loading large files """
     with open(tempfile, "ab+") as f:
         for chunk in chunks: f.write(chunk)
