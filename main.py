@@ -24,6 +24,7 @@ FLAGS = {
     "debug": False,
     "restore": False
 }
+HELP = None
 
 
 
@@ -65,19 +66,40 @@ def parse_args():
     raw_args = sys.argv
     real_args = []
     for arg in raw_args:
+        # TODO: less hard-coded looking solution.
         if arg.startswith("--"):
             if "=" not in arg:
-                print("invalid argument use, usage: --arg=var")
-                exit(0)
+                arg = arg.split("--", 1)[1]
+                if arg == "help":
+                    global HELP # TODO: not use a global, eugh.
+                    HELP = True
+                    continue
+                else:
+                    print("invalid argument use, usage: --arg=var")
+                    exit(0)
             key,value = arg.split("--", 1)[1].split("=", 1)
             real_args.append((key, value))
         elif arg.startswith("-"):
-            key, value = arg.split("-", 1)
+            key,value = arg.split("-", 1)
+            if value == "help":
+                HELP = True
+                continue
             real_args.append(value)
     return real_args
 
 if __name__ == "__main__":
     args = parse_args()
+
+    if HELP:
+        print("All args:")
+        arg_print = ""
+        flag_print = " - ".join(FLAGS.keys())
+        for item, data in ARGS.items():
+            arg_print += f"   {item}: {data['help']}\n"
+            arg_print += f"      Usage: {data['usage']}\n"
+        print(arg_print)
+        print(f"Flags: {flag_print}")
+        exit(0)
 
     for arg in args:
         if type(arg) == tuple: # Actual arg
